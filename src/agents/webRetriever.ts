@@ -10,6 +10,7 @@ export async function webRetriever(state: typeof ResearchState.State) {
 
     const result = await webSearch.invoke({
       query: task,
+      searchDepth: "advanced",
     });
 
     type TavilyResult = {
