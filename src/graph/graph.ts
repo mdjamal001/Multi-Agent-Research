@@ -1,36 +1,31 @@
 import { END, START, StateGraph } from "@langchain/langgraph";
 import { planner } from "../agents/planner";
-import { verifier } from "../agents/verifier";
-import { githubRetriever } from "../agents/githubRetriever";
-import { pdfRetriever } from "../agents/pdfRetriever";
-import { webRetriever } from "../agents/webRetriever";
 import { ResearchState } from "./state";
 import { analyzer } from "../agents/analyzer";
+import { retriever } from "../agents/retriever";
+import { reflection } from "../agents/reflection";
+import { reportWriter } from "../agents/reportWriter";
+import { shouldContinue } from "../utils/shouldContinue";
 
 export const graph = new StateGraph(ResearchState)
 
   .addNode("planner", planner)
-
-  .addNode("web", webRetriever)
-  // .addNode("pdf", pdfRetriever)
-  // .addNode("github", githubRetriever)
-
-  .addNode("verify", verifier)
-
+  .addNode("retriever", retriever)
   .addNode("analyze", analyzer)
+  .addNode("reflector", reflection)
+  .addNode("reportWriter", reportWriter)
 
   .addEdge(START, "planner")
+  .addEdge("planner", "retriever")
+  .addEdge("retriever", "analyze")
 
-  .addEdge("planner", "web")
-  // .addEdge("planner", "pdf")
-  // .addEdge("planner", "github")
+  .addEdge("analyze", "reflector")
 
-  .addEdge("web", "verify")
-  // .addEdge("pdf", "verify")
-  // .addEdge("github", "verify")
+  .addConditionalEdges("reflector", shouldContinue, {
+    retriever: "retriever",
+    reportWriter: "reportWriter",
+  })
 
-  .addEdge("verify", "analyze")
-
-  .addEdge("analyze", END)
+  .addEdge("reportWriter", END)
 
   .compile();

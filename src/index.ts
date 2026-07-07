@@ -10,8 +10,7 @@ async function main() {
   await writeFile("Agents-Graph.png", buffer);
 
   const result = await graph.invoke({
-    query:
-      "Research latest news about the war between iran and israel starting from july 1st, 2026. Include dates as well of the events",
+    query: "Compare LangGraph, CrewAI and AutoGen for enterprise AI systems.",
   });
 
   console.dir(result.analysis, {

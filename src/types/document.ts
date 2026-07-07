@@ -1,11 +1,9 @@
 export interface ResearchDocument {
-  source: "web" | "pdf" | "github" | "local";
-
+  source: "web" | "github" | "pdf";
   title: string;
-
   url?: string;
-
   content: string;
-
+  fullContent?: string;
   score?: number;
+  fetched: boolean;
 }
