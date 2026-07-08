@@ -4,11 +4,11 @@ import { analyzerPrompt } from "../prompts/analyzer";
 import { ResearchState } from "../graph/state";
 
 const schema = z.object({
-  summary: z.string(),
-
   sections: z.array(
     z.object({
       title: z.string(),
+      paragraphs: z.array(z.string()),
+      points_title: z.string(),
       points: z.array(z.string()),
     }),
   ),
@@ -54,7 +54,7 @@ ${context}
     },
   ]);
 
-  console.log("Done!\n");
+  console.log(`Done! Extracted ${analysis.sections.length} outcomes\n`);
 
   return {
     analysis: [analysis],

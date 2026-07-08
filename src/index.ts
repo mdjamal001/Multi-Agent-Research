@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { graph } from "./graph/graph";
 import { writeFile } from "fs/promises";
+import ReadAsync from "readline-sync";
 
 async function main() {
   const blob = await graph.getGraph().drawMermaidPng();
@@ -9,8 +10,11 @@ async function main() {
 
   await writeFile("Agents-Graph.png", buffer);
 
+  const query = ReadAsync.question("Enter research query: ");
+  console.log();
+
   const result = await graph.invoke({
-    query: "Research everything about 2026 FIFA World Cup 2026",
+    query,
   });
 }
 

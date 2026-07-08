@@ -41,24 +41,66 @@ export async function generatePdf(report: Report, outputPath: string) {
   //Render Contents table
   doc.fontSize(18).font("Helvetica-Bold").text("Contents");
   doc.moveDown();
+  doc.font("Helvetica");
   report.sections.forEach((section, index) => {
     doc.text(`${index + 1}. ${section.title}`);
   });
 
-  //Render Sections
+  // Render Sections
   report.sections.forEach((section) => {
     doc.addPage();
-    doc.fontSize(20).font("Helvetica-Bold").text(section.title);
+
+    // Section Title
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(20)
+      .fillColor("black")
+      .text(section.title);
+
     doc.moveDown(0.3);
-    doc.fontSize(14).fillColor("gray").text(section.subtitle);
+
+    // Subtitle
+    doc
+      .font("Helvetica-Oblique")
+      .fontSize(13)
+      .fillColor("gray")
+      .text(section.subtitle);
+
     doc.moveDown();
-    doc.fillColor("black");
-    section.points.forEach((point) => {
-      doc.fontSize(12).text(`• ${point}`, {
-        indent: 20,
+
+    // Paragraphs
+    doc.font("Helvetica").fontSize(12).fillColor("black");
+
+    section.paragraphs.forEach((paragraph) => {
+      doc.text(paragraph, {
+        align: "justify",
+        lineGap: 3,
       });
-      doc.moveDown(0.2);
+
+      doc.moveDown();
     });
+
+    // Bullet heading
+    if (section.points.length > 0) {
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(14)
+        .fillColor("black")
+        .text(section.points_title);
+
+      doc.moveDown(0.5);
+
+      doc.font("Helvetica").fontSize(12);
+
+      section.points.forEach((point) => {
+        doc.list([point], {
+          bulletRadius: 2,
+          textIndent: 15,
+        });
+
+        doc.moveDown(0.3);
+      });
+    }
   });
 
   doc.end();

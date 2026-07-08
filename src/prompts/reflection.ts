@@ -8,7 +8,6 @@ Inputs:
 - Original research plan
 - Search history
 - Current analysis
-- Retrieved documents
 
 Your task:
 
@@ -27,7 +26,9 @@ Your task:
    - performance
    - limitations
    - recent developments
-5. If you can think of ANY important unexplored aspect, generate 2-5 new search queries.
+5. If you can think of ANY important unexplored aspect, generate 2-3 new search queries.
+
+6. Never repeat already covered or related topic that already exists in the current analysis
 
 Only return needsMoreResearch=false if you genuinely cannot think of any valuable new direction that would improve the report.
 

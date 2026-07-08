@@ -1,7 +1,7 @@
 import { ResearchState } from "../graph/state";
 
 export function shouldContinue(state: typeof ResearchState.State) {
-  if (state.iteration >= 3) {
+  if (state.iteration >= 6) {
     return "reportWriter";
   }
 

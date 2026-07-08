@@ -16,9 +16,6 @@ export async function reportWriter(state: typeof ResearchState.State) {
       (analysis, i) => `
 Iteration ${i + 1}
 
-Summary:
-${analysis.summary}
-
 Sections:
 
 ${analysis.sections
@@ -26,6 +23,9 @@ ${analysis.sections
     (section) => `
 ${section.title}
 
+${section.paragraphs.join("\n\n")}
+
+${section.points_title}
 ${section.points.join("\n")}
 `,
   )
@@ -74,31 +74,62 @@ function buildReport(
   }[],
   analyses: Analysis[],
 ): Report {
-  const merged = new Map<string, Set<string>>();
+  const merged = new Map<
+    string,
+    {
+      paragraphs: Set<string>;
+      pointsTitle: string;
+      points: Set<string>;
+    }
+  >();
 
   for (const analysis of analyses) {
     for (const section of analysis.sections) {
       if (!merged.has(section.title)) {
-        merged.set(section.title, new Set());
+        merged.set(section.title, {
+          paragraphs: new Set(),
+          pointsTitle: section.points_title,
+          points: new Set(),
+        });
       }
 
-      section.points.forEach((point) => {
-        merged.get(section.title)!.add(point);
-      });
+      const current = merged.get(section.title)!;
+
+      section.paragraphs.forEach((paragraph) =>
+        current.paragraphs.add(paragraph),
+      );
+
+      if (!current.pointsTitle && section.points_title) {
+        current.pointsTitle = section.points_title;
+      }
+
+      section.points.forEach((point) => current.points.add(point));
     }
   }
 
   return {
     title,
-
     executiveSummary: summary,
 
     sections: toc
-      .map((item) => ({
-        title: item.title,
-        subtitle: item.subtitle,
-        points: [...(merged.get(item.title) ?? [])],
-      }))
-      .filter((section) => section.points.length > 0),
+      .map((item) => {
+        const section = merged.get(item.title);
+
+        if (!section) return null;
+
+        return {
+          title: item.title,
+          subtitle: item.subtitle,
+
+          paragraphs: [...section.paragraphs],
+
+          points_title: section.pointsTitle,
+
+          points: [...section.points],
+        };
+      })
+      .filter(
+        (section): section is NonNullable<typeof section> => section !== null,
+      ),
   };
 }

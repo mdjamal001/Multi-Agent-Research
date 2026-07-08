@@ -13,19 +13,6 @@ const structuredLLM = llm.withStructuredOutput(schema);
 export async function reflection(state: typeof ResearchState.State) {
   console.log("Reflecting...");
 
-  const documents = state.documents
-    .map(
-      (doc) => `
-Title: ${doc.title}
-
-URL: ${doc.url}
-
-Content:
-${doc.content}
-`,
-    )
-    .join("\n-----------------\n");
-
   const searchedQueries = state.searchHistory
     .map((entry) => `- ${entry.query} (${entry.source})`)
     .join("\n");
@@ -50,8 +37,6 @@ ${searchedQueries}
 Current Analysis:
 ${JSON.stringify(state.analysis, null, 2)}
 
-Retrieved Documents:
-${documents}
 `,
     },
   ]);
