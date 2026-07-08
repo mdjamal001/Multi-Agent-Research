@@ -16,6 +16,10 @@ async function main() {
   const result = await graph.invoke({
     query,
   });
+
+  if (result.mode == "chat") {
+    console.log("\nAgent: ", result.response);
+  }
 }
 
 main();

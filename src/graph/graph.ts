@@ -5,7 +5,8 @@ import { analyzer } from "../agents/analyzer";
 import { retriever } from "../agents/retriever";
 import { reflection } from "../agents/reflection";
 import { reportWriter } from "../agents/reportWriter";
-import { shouldContinue } from "../utils/shouldContinue";
+import { reflectorRouter } from "../routers/reflectorRouter";
+import { plannerRouter } from "../routers/plannerRouter";
 
 export const graph = new StateGraph(ResearchState)
 
@@ -16,12 +17,15 @@ export const graph = new StateGraph(ResearchState)
   .addNode("reportWriter", reportWriter)
 
   .addEdge(START, "planner")
-  .addEdge("planner", "retriever")
+  .addConditionalEdges("planner", plannerRouter, {
+    retriever: "retriever",
+    [END]: END,
+  })
   .addEdge("retriever", "analyze")
 
   .addEdge("analyze", "reflector")
 
-  .addConditionalEdges("reflector", shouldContinue, {
+  .addConditionalEdges("reflector", reflectorRouter, {
     retriever: "retriever",
     reportWriter: "reportWriter",
   })
