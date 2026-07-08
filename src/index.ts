@@ -10,11 +10,7 @@ async function main() {
   await writeFile("Agents-Graph.png", buffer);
 
   const result = await graph.invoke({
-    query: "Compare LangGraph, CrewAI and AutoGen for enterprise AI systems.",
-  });
-
-  console.dir(result.analysis, {
-    depth: null,
+    query: "Israel, Iran and USA current war scenario",
   });
 }
 

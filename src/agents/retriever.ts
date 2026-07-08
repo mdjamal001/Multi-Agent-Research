@@ -16,7 +16,6 @@ export async function retriever(state: typeof ResearchState.State) {
 
   const tasks = candidateQueries.filter((query) => !searched.has(query));
 
-  // Nothing new to search
   if (tasks.length === 0) {
     return {
       iteration: state.iteration + 1,
@@ -25,10 +24,10 @@ export async function retriever(state: typeof ResearchState.State) {
 
   const responses = await Promise.all(tasks.map((task) => searchWeb(task)));
 
-  let documents: ResearchDocument[] = responses.flat();
+  let newDocuments: ResearchDocument[] = responses.flat();
 
-  documents = deduplicate(documents);
-  documents = rerank(documents);
+  newDocuments = deduplicate(newDocuments);
+  newDocuments = rerank(newDocuments);
 
   const history: SearchHistory[] = tasks.map((query) => ({
     query,
@@ -36,10 +35,11 @@ export async function retriever(state: typeof ResearchState.State) {
     timestamp: new Date().toISOString(),
   }));
 
-  console.log(`Done! Retrieved ${tasks.length} results`);
+  console.log(`Done! Retrieved ${newDocuments.length} documents\n`);
 
   return {
-    documents: documents.slice(0, 10),
+    documents: newDocuments,
+    newDocuments,
     searchHistory: history,
     iteration: state.iteration + 1,
   };

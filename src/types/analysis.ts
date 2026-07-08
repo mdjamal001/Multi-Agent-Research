@@ -1,6 +1,9 @@
+export interface AnalysisSection {
+  title: string;
+  points: string[];
+}
+
 export interface Analysis {
   summary: string;
-  keyFindings: string[];
-  comparisons: string[];
-  limitations: string[];
+  sections: AnalysisSection[];
 }

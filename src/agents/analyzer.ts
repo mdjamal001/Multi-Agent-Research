@@ -5,8 +5,13 @@ import { ResearchState } from "../graph/state";
 
 const schema = z.object({
   summary: z.string(),
-  keyFindings: z.array(z.string()),
-  limitations: z.array(z.string()),
+
+  sections: z.array(
+    z.object({
+      title: z.string(),
+      points: z.array(z.string()),
+    }),
+  ),
 });
 
 const structuredLLM = llm.withStructuredOutput(schema);
@@ -14,7 +19,7 @@ const structuredLLM = llm.withStructuredOutput(schema);
 export async function analyzer(state: typeof ResearchState.State) {
   console.log("Analyzing...");
 
-  const context = state.documents
+  const context = state.newDocuments
     .map(
       (doc) => `
 Title: ${doc.title}
@@ -38,6 +43,11 @@ ${doc.fullContent ?? doc.content}
 Question:
 ${state.query}
 
+- You are analyzing only the documents retrieved during the current research iteration.
+- Assume that previous iterations have already been analyzed.
+- Extract only the new information introduced by these documents.
+- Do not restate facts unless the new documents provide additional evidence, corrections, or deeper insights.
+
 Documents:
 ${context}
 `,
@@ -47,6 +57,6 @@ ${context}
   console.log("Done!\n");
 
   return {
-    analysis,
+    analysis: [analysis],
   };
 }

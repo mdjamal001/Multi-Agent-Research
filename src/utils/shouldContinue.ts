@@ -12,11 +12,11 @@ export function shouldContinue(state: typeof ResearchState.State) {
   );
 
   if (state.reflection.needsMoreResearch && hasNewQueries) {
-    console.log("More retrieval...");
+    console.log("More retrieval...\n");
     return "retriever";
   }
 
-  console.log("Enough content! Writing...");
+  console.log("Enough content! Writing...\n");
   return "reportWriter";
 }
 

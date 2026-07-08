@@ -3,6 +3,8 @@ import { plannerPrompt } from "../prompts/planner";
 import { ResearchState } from "../graph/state";
 
 export async function planner(state: typeof ResearchState.State) {
+  console.log("Planning...");
+
   const response = await llm.invoke([
     {
       role: "system",
@@ -18,6 +20,8 @@ export async function planner(state: typeof ResearchState.State) {
     .split("\n")
     .map((line) => line.replace(/^\d+\.\s*/, "").trim())
     .filter(Boolean);
+
+  console.log("Done!\n");
 
   return {
     plan,

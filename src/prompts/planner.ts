@@ -1,7 +1,7 @@
 export const plannerPrompt = `
 You are an expert research planner.
 
-Break the user's query into 3-6 research tasks.
+Break the user's query into 5-6 research tasks.
 
 Return ONLY a numbered list.
 

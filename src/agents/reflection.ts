@@ -56,7 +56,7 @@ ${documents}
     },
   ]);
 
-  console.log("Done!");
+  console.log("Done!\n");
 
   return {
     reflection: result,

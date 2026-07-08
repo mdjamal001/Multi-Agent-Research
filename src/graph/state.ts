@@ -3,6 +3,7 @@ import { Analysis } from "../types/analysis";
 import { Reflection } from "../types/reflection";
 import { ResearchDocument } from "../types/document";
 import { SearchHistory } from "../types/searchHistory";
+import { Report } from "../types/report";
 
 export const ResearchState = Annotation.Root({
   // Original user query
@@ -17,14 +18,20 @@ export const ResearchState = Annotation.Root({
     default: () => [],
   }),
 
+  // curr new retrived doc
+  newDocuments: Annotation<ResearchDocument[]>(),
+
+  // Current analysis
+  analysis: Annotation<Analysis[]>({
+    reducer: (curr, update) => [...curr, ...update],
+    default: () => [],
+  }),
+
   // History of every retrieval performed
   searchHistory: Annotation<SearchHistory[]>({
     reducer: (curr, update) => [...curr, ...update],
     default: () => [],
   }),
-
-  // Current analysis
-  analysis: Annotation<Analysis>(),
 
   // Reflection output
   reflection: Annotation<Reflection>(),
@@ -36,5 +43,5 @@ export const ResearchState = Annotation.Root({
   }),
 
   // Final report
-  report: Annotation<string>(),
+  report: Annotation<Report>(),
 });
