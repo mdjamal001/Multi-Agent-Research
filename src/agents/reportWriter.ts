@@ -4,6 +4,7 @@ import { reportIntroSchema } from "../types/reportIntroSchema";
 import { ResearchState } from "../graph/state";
 import { Analysis } from "../types/analysis";
 import { Report } from "../types/report";
+import { generatePdf } from "../docs/generatePdf";
 
 const structuredLLM = llm.withStructuredOutput(reportIntroSchema);
 
@@ -45,13 +46,19 @@ ${section.points.join("\n")}
   ]);
 
   const report = buildReport(
-    state.query,
+    intro.title,
     intro.executiveSummary,
     intro.tableOfContents,
     state.analysis,
   );
 
-  console.dir(report, { depth: Infinity, colors: true });
+  try {
+    await generatePdf(report, `./reports/${intro.fileName}.pdf`);
+  } catch (e) {
+    console.error("Error: ", e);
+  }
+
+  console.log("Report Generated");
 
   return {
     report,

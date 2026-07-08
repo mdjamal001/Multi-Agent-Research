@@ -10,7 +10,7 @@ async function main() {
   await writeFile("Agents-Graph.png", buffer);
 
   const result = await graph.invoke({
-    query: "Israel, Iran and USA current war scenario",
+    query: "Research everything about 2026 FIFA World Cup 2026",
   });
 }
 
