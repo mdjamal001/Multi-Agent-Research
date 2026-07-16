@@ -7,7 +7,7 @@ Your task is NOT to rewrite the report.
 
 Your responsibilities are ONLY:
 
-1. Write a concise executive summary (3-5 paragraphs).
+1. Write a concise executive summary with atleast 3 paragraphs.
 2. Generate a professional table of contents.
 3. Don't change the total number of titles and name of the titles at all
 4. Generate a main title for the report to use in the report first page

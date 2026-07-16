@@ -13,9 +13,14 @@ async function main() {
   const query = ReadAsync.question("Enter research query: ");
   console.log();
 
-  const result = await graph.invoke({
-    query,
-  });
+  const result = await graph.invoke(
+    {
+      query,
+    },
+    {
+      recursionLimit: 100,
+    },
+  );
 
   if (result.mode == "chat") {
     console.log("\nAgent: ", result.response);

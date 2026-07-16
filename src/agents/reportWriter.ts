@@ -2,7 +2,7 @@ import { llm } from "../models/gemini";
 import { reportIntroPrompt } from "../prompts/reportIntro";
 import { reportIntroSchema } from "../types/reportIntroSchema";
 import { ResearchState } from "../graph/state";
-import { Analysis } from "../types/analysis";
+import { Analysis, SectionContent } from "../types/analysis";
 import { Report } from "../types/report";
 import { generatePdf } from "../docs/generatePdf";
 
@@ -19,16 +19,29 @@ Iteration ${i + 1}
 Sections:
 
 ${analysis.sections
-  .map(
-    (section) => `
+  .map((section) => {
+    const blocks = section.content
+      .map((block) => {
+        switch (block.type) {
+          case "paragraph":
+            return block.paragraphs.join("\n\n");
+
+          case "bullet":
+            return `
+${block.title}
+
+${block.points.join("\n")}
+`;
+        }
+      })
+      .join("\n\n");
+
+    return `
 ${section.title}
 
-${section.paragraphs.join("\n\n")}
-
-${section.points_title}
-${section.points.join("\n")}
-`,
-  )
+${blocks}
+`;
+  })
   .join("\n")}
 `,
     )
@@ -55,7 +68,7 @@ ${section.points.join("\n")}
   try {
     await generatePdf(report, `./reports/${intro.fileName}.pdf`);
   } catch (e) {
-    console.error("Error: ", e);
+    console.error(e);
   }
 
   console.log("Report Generated");
@@ -77,9 +90,7 @@ function buildReport(
   const merged = new Map<
     string,
     {
-      paragraphs: Set<string>;
-      pointsTitle: string;
-      points: Set<string>;
+      content: SectionContent[];
     }
   >();
 
@@ -87,28 +98,19 @@ function buildReport(
     for (const section of analysis.sections) {
       if (!merged.has(section.title)) {
         merged.set(section.title, {
-          paragraphs: new Set(),
-          pointsTitle: section.points_title,
-          points: new Set(),
+          content: [],
         });
       }
 
       const current = merged.get(section.title)!;
 
-      section.paragraphs.forEach((paragraph) =>
-        current.paragraphs.add(paragraph),
-      );
-
-      if (!current.pointsTitle && section.points_title) {
-        current.pointsTitle = section.points_title;
-      }
-
-      section.points.forEach((point) => current.points.add(point));
+      current.content.push(...section.content);
     }
   }
 
   return {
     title,
+
     executiveSummary: summary,
 
     sections: toc
@@ -120,12 +122,7 @@ function buildReport(
         return {
           title: item.title,
           subtitle: item.subtitle,
-
-          paragraphs: [...section.paragraphs],
-
-          points_title: section.pointsTitle,
-
-          points: [...section.points],
+          content: section.content,
         };
       })
       .filter(

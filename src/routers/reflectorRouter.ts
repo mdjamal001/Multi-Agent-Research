@@ -1,7 +1,13 @@
+import { researchMetaData } from "../config/researchMeta";
 import { ResearchState } from "../graph/state";
 
 export function reflectorRouter(state: typeof ResearchState.State) {
-  if (state.iteration >= 6) {
+  if (
+    state.iteration >= researchMetaData.MAX_ITERATIONS ||
+    state.reflection.completeness > researchMetaData.COMPLETENESS ||
+    !state.reflection.needsMoreResearch
+  ) {
+    console.log("Enough content! Writing...\n");
     return "reportWriter";
   }
 
@@ -11,7 +17,7 @@ export function reflectorRouter(state: typeof ResearchState.State) {
     (query) => !searched.has(query),
   );
 
-  if (state.reflection.needsMoreResearch && hasNewQueries) {
+  if (hasNewQueries) {
     console.log("More retrieval...\n");
     return "retriever";
   }
@@ -19,6 +25,3 @@ export function reflectorRouter(state: typeof ResearchState.State) {
   console.log("Enough content! Writing...\n");
   return "reportWriter";
 }
-
-// Checks if reflection agent returns any new queries that were not already searched for before.
-// If found new queries, go back to retriever otherwise report
