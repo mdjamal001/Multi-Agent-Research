@@ -7,6 +7,13 @@ export type SectionContent =
       type: "bullet";
       title: string;
       points: string[];
+    }
+  | {
+      type: "chart";
+      chartId: string;
+      title: string;
+      imagePath: string;
+      caption: string;
     };
 
 export interface AnalysisSection {

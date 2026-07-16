@@ -15,7 +15,6 @@ Instructions:
 - Use bullet blocks only where lists improve readability (e.g. statistics, comparisons, timelines, implementation steps, key findings).
 - Keep each bullet concise and focused on a single fact.
 - Generate a title for every bullets block
-- If code, commands, equations, algorithms, pseudocode, or formatted text are required, place them inside a SINGLE bullet using escaped newline characters (\\n). Do not split them across multiple bullets.
 - Merge related information from multiple documents into the same section.
 - Ignore duplicate or low-value information.
 - Generate a concise 1-2 sentence summary for every section describing the concepts covered.

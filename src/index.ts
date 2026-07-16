@@ -10,8 +10,11 @@ async function main() {
 
   await writeFile("Agents-Graph.png", buffer);
 
-  const query = ReadAsync.question("Enter research query: ");
-  console.log();
+  const query = `Analyze the AI hardware ecosystem.
+
+Compare NVIDIA, AMD, Intel, Qualcomm, Broadcom and TSMC.
+
+Include revenue growth, AI accelerator market share, manufacturing technologies, product families, strategic partnerships and future outlook.`;
 
   const result = await graph.invoke(
     {

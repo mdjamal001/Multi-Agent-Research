@@ -7,6 +7,7 @@ import { reflection } from "../agents/reflection";
 import { reportWriter } from "../agents/reportWriter";
 import { reflectorRouter } from "../routers/reflectorRouter";
 import { plannerRouter } from "../routers/plannerRouter";
+import { visualizer } from "../agents/visualizer";
 
 export const graph = new StateGraph(ResearchState)
 
@@ -14,6 +15,7 @@ export const graph = new StateGraph(ResearchState)
   .addNode("retriever", retriever)
   .addNode("analyze", analyzer)
   .addNode("reflector", reflection)
+  .addNode("visualizer", visualizer)
   .addNode("reportWriter", reportWriter)
 
   .addEdge(START, "planner")
@@ -27,8 +29,10 @@ export const graph = new StateGraph(ResearchState)
 
   .addConditionalEdges("reflector", reflectorRouter, {
     retriever: "retriever",
-    reportWriter: "reportWriter",
+    visualizer: "visualizer",
   })
+
+  .addEdge("visualizer", "reportWriter")
 
   .addEdge("reportWriter", END)
 

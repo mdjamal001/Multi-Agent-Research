@@ -5,6 +5,7 @@ import { ResearchState } from "../graph/state";
 import { Analysis, SectionContent } from "../types/analysis";
 import { Report } from "../types/report";
 import { generatePdf } from "../docs/generatePdf";
+import { Visualization } from "../types/visualization";
 
 const structuredLLM = llm.withStructuredOutput(reportIntroSchema);
 
@@ -63,6 +64,7 @@ ${blocks}
     intro.executiveSummary,
     intro.tableOfContents,
     state.analysis,
+    state.visualizations,
   );
 
   try {
@@ -86,6 +88,7 @@ function buildReport(
     subtitle: string;
   }[],
   analyses: Analysis[],
+  visualizations: Visualization[],
 ): Report {
   const merged = new Map<
     string,
@@ -121,8 +124,14 @@ function buildReport(
 
         return {
           title: item.title,
+
           subtitle: item.subtitle,
+
           content: section.content,
+
+          visualizations: visualizations.filter(
+            (visualization) => visualization.section === item.title,
+          ),
         };
       })
       .filter(

@@ -4,6 +4,7 @@ import { Reflection } from "../types/reflection";
 import { ResearchDocument } from "../types/document";
 import { SearchHistory } from "../types/searchHistory";
 import { Report } from "../types/report";
+import { Visualization } from "../types/visualization";
 
 export const ResearchState = Annotation.Root({
   // Original user query
@@ -47,6 +48,11 @@ export const ResearchState = Annotation.Root({
   iteration: Annotation<number>({
     value: (_, update) => update,
     default: () => 0,
+  }),
+
+  visualizations: Annotation<Visualization[]>({
+    reducer: (curr, update) => [...curr, ...update],
+    default: () => [],
   }),
 
   // Final report

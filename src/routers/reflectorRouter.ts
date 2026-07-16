@@ -7,8 +7,8 @@ export function reflectorRouter(state: typeof ResearchState.State) {
     state.reflection.completeness > researchMetaData.COMPLETENESS ||
     !state.reflection.needsMoreResearch
   ) {
-    console.log("Enough content! Writing...\n");
-    return "reportWriter";
+    console.log("Enough content! Creating Visuals....\n");
+    return "visualizer";
   }
 
   const searched = new Set(state.searchHistory.map((h) => h.query));
@@ -22,6 +22,6 @@ export function reflectorRouter(state: typeof ResearchState.State) {
     return "retriever";
   }
 
-  console.log("Enough content! Writing...\n");
-  return "reportWriter";
+  console.log("Enough content! Creating Visuals...\n");
+  return "visualizer";
 }
