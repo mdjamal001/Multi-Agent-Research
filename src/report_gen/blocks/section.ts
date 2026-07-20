@@ -2,6 +2,10 @@ import { Report } from "../../types/report";
 import { SectionContent } from "../../types/analysis";
 import { Visualization } from "../../types/visualization";
 
+const TABLE_WIDTH = 450;
+const LABEL_WIDTH = TABLE_WIDTH * 0.55;
+const VALUE_WIDTH = TABLE_WIDTH * 0.45;
+
 export function renderSection(
   doc: PDFKit.PDFDocument,
   section: Report["sections"][number],
@@ -24,7 +28,6 @@ export function renderSection(
 
   section.content.forEach((block) => {
     renderContentBlock(doc, block);
-
     doc.moveDown();
   });
 
@@ -34,7 +37,6 @@ export function renderSection(
 
   section.visualizations.forEach((visualization) => {
     renderVisualization(doc, visualization);
-
     doc.moveDown(1.5);
   });
 }
@@ -133,45 +135,59 @@ function renderVisualization(
 function renderTable(doc: PDFKit.PDFDocument, visualization: Visualization) {
   const startX = doc.page.margins.left;
 
-  const tableWidth = 450;
-  const labelWidth = tableWidth * 0.55;
-  const valueWidth = tableWidth * 0.45;
-
   let y = doc.y;
 
   // Header
   doc.font("Helvetica-Bold").fontSize(11);
 
-  doc.rect(startX, y, labelWidth, 25).stroke();
-  doc.rect(startX + labelWidth, y, valueWidth, 25).stroke();
+  doc.rect(startX, y, LABEL_WIDTH, 25).stroke();
+  doc.rect(startX + LABEL_WIDTH, y, VALUE_WIDTH, 25).stroke();
 
   doc.text(visualization.xAxis ?? "Label", startX + 5, y + 7, {
-    width: labelWidth - 10,
+    width: LABEL_WIDTH - 10,
   });
 
-  doc.text(visualization.yAxis ?? "Value", startX + labelWidth + 5, y + 7, {
-    width: valueWidth - 10,
+  doc.text(visualization.yAxis ?? "Value", startX + LABEL_WIDTH + 5, y + 7, {
+    width: VALUE_WIDTH - 10,
   });
 
   y += 25;
 
-  doc.font("Helvetica");
+  doc.font("Helvetica").fontSize(11);
 
   for (const row of visualization.data) {
-    doc.rect(startX, y, labelWidth, 22).stroke();
-    doc.rect(startX + labelWidth, y, valueWidth, 22).stroke();
+    const label = String(row.label);
+    const value = String(row.value);
 
-    doc.text(String(row.label), startX + 5, y + 5, {
-      width: labelWidth - 10,
+    const labelHeight = doc.heightOfString(label, {
+      width: LABEL_WIDTH - 10,
     });
 
-    doc.text(String(row.value), startX + labelWidth + 5, y + 5, {
-      width: valueWidth - 10,
+    const valueHeight = doc.heightOfString(value, {
+      width: VALUE_WIDTH - 10,
     });
 
-    y += 22;
+    const rowHeight = Math.max(labelHeight, valueHeight) + 10;
+
+    doc.rect(startX, y, LABEL_WIDTH, rowHeight).stroke();
+    doc.rect(startX + LABEL_WIDTH, y, VALUE_WIDTH, rowHeight).stroke();
+
+    const labelY = y + (rowHeight - labelHeight) / 2;
+    const valueY = y + (rowHeight - valueHeight) / 2;
+
+    doc.text(label, startX + 5, labelY, {
+      width: LABEL_WIDTH - 10,
+    });
+
+    doc.text(value, startX + LABEL_WIDTH + 5, valueY, {
+      width: VALUE_WIDTH - 10,
+    });
+
+    y += rowHeight;
   }
 
+  // Reset PDF cursor
+  doc.x = doc.page.margins.left;
   doc.y = y;
 }
 
@@ -189,7 +205,19 @@ function enoughHeight(doc: PDFKit.PDFDocument, visualization: Visualization) {
   let bodyHeight = 260;
 
   if (visualization.type === "table") {
-    bodyHeight = 25 + visualization.data.length * 10;
+    bodyHeight = 25;
+
+    for (const row of visualization.data) {
+      const labelHeight = doc.heightOfString(String(row.label), {
+        width: LABEL_WIDTH - 10,
+      });
+
+      const valueHeight = doc.heightOfString(String(row.value), {
+        width: VALUE_WIDTH - 10,
+      });
+
+      bodyHeight += Math.max(labelHeight, valueHeight) + 10;
+    }
   }
 
   const requiredHeight = titleHeight + bodyHeight + captionHeight + 30;

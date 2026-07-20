@@ -26,6 +26,13 @@ export const ResearchState = Annotation.Root({
     default: () => [],
   }),
 
+  context: Annotation<string>({
+    reducer: (_, value) => value,
+    default: () => "",
+  }),
+
+  jobId: Annotation<string>(),
+
   // curr new retrived doc
   newDocuments: Annotation<ResearchDocument[]>(),
 

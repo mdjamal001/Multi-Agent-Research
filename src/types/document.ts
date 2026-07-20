@@ -1,5 +1,5 @@
 export interface ResearchDocument {
-  source: "web" | "github" | "pdf";
+  source: "web" | "github" | "document";
   title: string;
   url?: string;
   content: string;

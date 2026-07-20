@@ -1,4 +1,5 @@
 import { ResearchState } from "../graph/state";
+import { retrieveDocContext } from "../retriever/retrieveDocContext";
 import { searchWeb } from "../sources/web";
 import { ResearchDocument } from "../types/document";
 import { SearchHistory } from "../types/searchHistory";
@@ -22,9 +23,25 @@ export async function retriever(state: typeof ResearchState.State) {
     };
   }
 
-  const responses = await Promise.all(tasks.map((task) => searchWeb(task)));
+  const webResponses = await Promise.all(tasks.map((task) => searchWeb(task)));
 
-  let newDocuments: ResearchDocument[] = responses.flat();
+  let newDocuments: ResearchDocument[] = webResponses.flat();
+
+  // Search uploaded documents only if a collection exists
+  if (state.jobId) {
+    const documentResponses = await Promise.all(
+      tasks.map((task) => {
+        const collection = `research_${state.jobId}`;
+        return retrieveDocContext(task, collection);
+      }),
+    );
+    console.log(
+      "Chunks retrieved from retriever node: ",
+      documentResponses.length,
+    );
+
+    newDocuments.push(...documentResponses.flat());
+  }
 
   newDocuments = deduplicate(newDocuments);
   newDocuments = rerank(newDocuments);

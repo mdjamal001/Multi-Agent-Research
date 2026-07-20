@@ -4,7 +4,7 @@ import { reportIntroSchema } from "../types/reportIntroSchema";
 import { ResearchState } from "../graph/state";
 import { Analysis, SectionContent } from "../types/analysis";
 import { Report } from "../types/report";
-import { generatePdf } from "../docs/generatePdf";
+import { generatePdf } from "../report_gen/generatePdf";
 import { Visualization } from "../types/visualization";
 
 const structuredLLM = llm.withStructuredOutput(reportIntroSchema);
