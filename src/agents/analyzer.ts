@@ -24,20 +24,26 @@ const schema = z.object({
 const structuredLLM = llm.withStructuredOutput(schema);
 
 export async function analyzer(state: typeof ResearchState.State) {
-  console.log("Analyzing...");
+  console.log("\nAnalyzing...");
 
-  const context = state.newDocuments
-    .map(
-      (doc) => `
+  const context = state.newEvidence
+    .map((doc) => {
+      const source = doc.source.charAt(0).toUpperCase() + doc.source.slice(1);
+
+      const url = doc.metadata?.url ?? doc.metadata?.source ?? "N/A";
+
+      return `
+Source: ${source}
+
 Title: ${doc.title}
 
-URL: ${doc.url}
+Reference: ${url}
 
 Content:
 ${doc.fullContent ?? doc.content}
-`,
-    )
-    .join("\n\n");
+`;
+    })
+    .join("\n\n----------------------------------------\n\n");
 
   const rawAnalysis = await structuredLLM.invoke([
     {
@@ -50,18 +56,23 @@ ${doc.fullContent ?? doc.content}
 Question:
 ${state.query}
 
-- You are analyzing only the documents retrieved during the current research iteration.
-- Assume previous iterations have already been analyzed.
-- Extract only the new information introduced by these documents.
-- Do not restate facts unless the new documents provide additional evidence, corrections, or deeper insights.
+You are analyzing ONLY the evidence retrieved during the CURRENT research iteration.
 
-Documents:
+Previous iterations have already been analyzed.
+
+Your task is to:
+
+- Extract only NEW information.
+- Avoid repeating previous findings.
+- Combine information from multiple sources when appropriate.
+- Mention disagreements or corroborating evidence if multiple sources discuss the same topic.
+
+Evidence:
 ${context}
 `,
     },
   ]);
 
-  // Normalize Gemini output into the strict internal Analysis type
   const analysis: Analysis = {
     sections: rawAnalysis.sections.map((section) => ({
       title: section.title,
@@ -76,7 +87,7 @@ ${context}
 
         return {
           type: "bullet" as const,
-          title: block.title ?? "",
+          title: block.title,
           points: block.points ?? [],
         };
       }),
@@ -86,6 +97,6 @@ ${context}
   console.log(`Done! Extracted ${analysis.sections.length} sections\n`);
 
   return {
-    analysis: [analysis],
+    analysis: [...state.analysis, analysis],
   };
 }

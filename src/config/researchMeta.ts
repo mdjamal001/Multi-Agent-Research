@@ -1,4 +1,4 @@
 export const researchMetaData = {
-  MAX_ITERATIONS: 10,
-  COMPLETENESS: 90,
+  MAX_ITERATIONS: 8,
+  COMPLETENESS: 69,
 };
