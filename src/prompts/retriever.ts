@@ -16,6 +16,7 @@ Document Retrieval
 - Call at most ONE time.
 
 If uploaded documents and web information are both needed, use Document Retrieval first, then Web Search.
+NEVER use web search more than 2 times.
 
 Rules
 - Treat the research plan as ONE task, not multiple tasks.
