@@ -40,14 +40,32 @@ export async function planner(state: typeof ResearchState.State) {
     throw new Error("Planner produced no response.");
   }
 
-  const text =
-    typeof finalMessage.content === "string"
+  const text = Array.isArray(finalMessage.content)
+    ? finalMessage.content
+        .map((c) => {
+          if (typeof c === "string") {
+            return c;
+          }
+
+          if ("text" in c && typeof c.text === "string") {
+            return c.text;
+          }
+
+          return "";
+        })
+        .join("\n")
+    : typeof finalMessage.content === "string"
       ? finalMessage.content
-      : finalMessage.content.map((c) => ("text" in c ? c.text : "")).join("\n");
+      : "";
 
   const structured = await llm.withStructuredOutput(schema).invoke(text);
 
   console.log(`Done! Mode: ${structured.mode}\n`);
+
+  if (structured.mode == "research") {
+    console.log(structured.plan);
+  }
+  console.log();
 
   return {
     mode: structured.mode,

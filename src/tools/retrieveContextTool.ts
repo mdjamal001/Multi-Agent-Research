@@ -12,8 +12,13 @@ export function createRetrieveContextTool(collectionName: string) {
 
       console.log("Context retrieved:", docs.length);
 
-      return docs.map((d) => d.content).join("\n\n");
+      const serialized = docs
+        .map((doc) => doc.title + "\n" + doc.content)
+        .join("\n\n");
+
+      return [serialized, docs];
     },
+
     {
       name: "retrieve_context",
       description: `
@@ -27,6 +32,7 @@ Use this tool whenever:
       schema: z.object({
         query: z.string(),
       }),
+      responseFormat: "content_and_artifact",
     },
   );
 }

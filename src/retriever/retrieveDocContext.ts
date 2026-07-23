@@ -1,12 +1,13 @@
 import { embeddings } from "../documents/embeddings";
 import { getCollection } from "../documents/chroma";
-import { ResearchDocument } from "../types/document";
+import { ResearchEvidence } from "../types/document";
+import { randomUUID } from "crypto";
 
 export async function retrieveDocContext(
   query: string,
   collectionName: string,
   limit = 5,
-): Promise<ResearchDocument[]> {
+): Promise<ResearchEvidence[]> {
   const collection = await getCollection(collectionName);
 
   const queryEmbedding = await embeddings.embedQuery(query);
@@ -17,22 +18,25 @@ export async function retrieveDocContext(
   });
 
   const docs = results.documents?.[0] ?? [];
-  const metadata = results.metadatas?.[0] ?? [];
+  const metadatas = results.metadatas?.[0] ?? [];
+  const distances = results.distances?.[0] ?? [];
 
-  return docs.map((content, index) => {
-    const sourceValue = metadata[index]?.source;
-    const title =
-      typeof sourceValue === "string" ? sourceValue : "Uploaded Document";
-    const url = typeof sourceValue === "string" ? sourceValue : undefined;
-    const normalizedContent = content ?? "";
+  return docs.map((content, index): ResearchEvidence => {
+    const metadata = metadatas[index] ?? {};
 
     return {
+      id: randomUUID(),
       source: "document",
-      title,
-      url,
-      content: normalizedContent,
-      fullContent: normalizedContent,
+      title:
+        typeof metadata.source === "string"
+          ? metadata.source
+          : "Uploaded Document",
+      content: content ?? "",
+      fullContent: content ?? "",
+      score:
+        typeof distances[index] === "number" ? 1 - distances[index] : undefined,
       fetched: true,
+      metadata,
     };
   });
 }

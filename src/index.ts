@@ -36,7 +36,7 @@ async function main() {
   // -------------------------
 
   const query =
-    "How does Linux manage memory internally? Cover virtual memory, paging, page tables, TLBs, NUMA, huge pages, slab allocators, OOM killer, and performance optimization.";
+    "Analyze the project report and compare in depth the methodologies and trends in the existing similar platforms";
 
   const result = await graph.invoke(
     {

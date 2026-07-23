@@ -1,5 +1,5 @@
 export interface SearchHistory {
   query: string;
   timestamp: string;
-  source: "web" | "github" | "pdf";
+  source: "web" | "github" | "document" | "database" | "agent";
 }

@@ -1,7 +1,7 @@
 import { Annotation } from "@langchain/langgraph";
 import { Analysis } from "../types/analysis";
 import { Reflection } from "../types/reflection";
-import { ResearchDocument } from "../types/document";
+import { ResearchEvidence } from "../types/document";
 import { SearchHistory } from "../types/searchHistory";
 import { Report } from "../types/report";
 import { Visualization } from "../types/visualization";
@@ -21,7 +21,7 @@ export const ResearchState = Annotation.Root({
   }),
 
   // Retrieved documents from all sources
-  documents: Annotation<ResearchDocument[]>({
+  evidence: Annotation<ResearchEvidence[]>({
     reducer: (curr, update) => [...curr, ...update],
     default: () => [],
   }),
@@ -34,7 +34,7 @@ export const ResearchState = Annotation.Root({
   jobId: Annotation<string>(),
 
   // curr new retrived doc
-  newDocuments: Annotation<ResearchDocument[]>(),
+  newEvidence: Annotation<ResearchEvidence[]>(),
 
   // Current analysis
   analysis: Annotation<Analysis[]>({

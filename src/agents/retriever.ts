@@ -1,63 +1,105 @@
+import { createAgent } from "langchain";
+import { ToolMessage } from "@langchain/core/messages";
+import { StructuredToolInterface } from "@langchain/core/tools";
+
 import { ResearchState } from "../graph/state";
-import { retrieveDocContext } from "../retriever/retrieveDocContext";
-import { searchWeb } from "../sources/web";
-import { ResearchDocument } from "../types/document";
-import { SearchHistory } from "../types/searchHistory";
+import { llm } from "../models/ollama";
+import { retrieverPrompt } from "../prompts/retriever";
+
+import { searchWebTool } from "../tools/webSearch";
+import { createRetrieveContextTool } from "../tools/retrieveContextTool";
+// import { createDatabaseTool } from "../tools/databaseTool";
+
 import { deduplicate } from "../utils/deDuplicate";
 import { rerank } from "../utils/reRanker";
 
+import { SearchHistory } from "../types/searchHistory";
+import { ResearchEvidence } from "../types/document";
+
+async function retrieverAgent(state: typeof ResearchState.State) {
+  const tools: StructuredToolInterface[] = [searchWebTool];
+
+  if (state.jobId) {
+    tools.push(createRetrieveContextTool(`research_${state.jobId}`));
+  }
+
+  // Future
+  // if (state.databaseSession) {
+  //   tools.push(createDatabaseTool(...));
+  // }
+
+  const agent = createAgent({
+    model: llm,
+    tools,
+    systemPrompt: retrieverPrompt,
+  });
+
+  return agent.invoke({
+    messages: [
+      {
+        role: "user",
+        content: JSON.stringify({
+          query: state.query,
+          tasks: state.reflection?.followUpQueries?.length
+            ? state.reflection.followUpQueries
+            : state.plan,
+          previousSearches: state.searchHistory,
+        }),
+      },
+    ],
+  });
+}
+
 export async function retriever(state: typeof ResearchState.State) {
-  console.log("Searching...");
+  console.log("Retrieving...");
 
   const candidateQueries = state.reflection?.followUpQueries?.length
     ? state.reflection.followUpQueries
     : state.plan;
 
-  const searched = new Set(state.searchHistory.map((entry) => entry.query));
+  const searched = new Set(state.searchHistory.map((h) => h.query));
 
-  const tasks = candidateQueries.filter((query) => !searched.has(query));
+  const tasks = candidateQueries.filter((q) => !searched.has(q));
 
-  if (tasks.length === 0) {
+  if (!tasks.length) {
     return {
       iteration: state.iteration + 1,
     };
   }
 
-  const webResponses = await Promise.all(tasks.map((task) => searchWeb(task)));
+  const result = await retrieverAgent(state);
 
-  let newDocuments: ResearchDocument[] = webResponses.flat();
+  const evidence: ResearchEvidence[] = [];
 
-  // Search uploaded documents only if a collection exists
-  if (state.jobId) {
-    const documentResponses = await Promise.all(
-      tasks.map((task) => {
-        const collection = `research_${state.jobId}`;
-        return retrieveDocContext(task, collection);
-      }),
-    );
-    console.log(
-      "Chunks retrieved from retriever node: ",
-      documentResponses.length,
-    );
+  for (const message of result.messages) {
+    if (message.getType() !== "tool") continue;
 
-    newDocuments.push(...documentResponses.flat());
+    const toolMessage = message as ToolMessage;
+
+    const artifact = (toolMessage as any).artifact;
+
+    if (Array.isArray(artifact)) {
+      evidence.push(...artifact);
+    }
   }
 
-  newDocuments = deduplicate(newDocuments);
-  newDocuments = rerank(newDocuments);
+  console.log(`Retrieved ${evidence.length} documents!`);
+
+  const rankedEvidence = rerank(deduplicate(evidence));
 
   const history: SearchHistory[] = tasks.map((query) => ({
     query,
-    source: "web",
+    source: "agent",
     timestamp: new Date().toISOString(),
   }));
 
-  console.log(`Done! Retrieved ${newDocuments.length} documents\n`);
-
   return {
-    documents: newDocuments,
-    newDocuments,
-    searchHistory: history,
+    evidence: rankedEvidence,
+
+    newEvidence: rankedEvidence,
+
+    searchHistory: [...state.searchHistory, ...history],
+
     iteration: state.iteration + 1,
   };
 }
