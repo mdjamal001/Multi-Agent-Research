@@ -5,11 +5,14 @@ import { llm } from "../models/gemini";
 import { plannerPrompt } from "../prompts/planner";
 import { createRetrieveContextTool } from "../tools/retrieveContextTool";
 import { ResearchState } from "../graph/state";
+import { hasDatabaseConfig } from "../database/config";
+import { executeSQLTool } from "../database/tools";
+import { getDatabase } from "../database/db";
 
 const schema = z.object({
   mode: z.enum(["chat", "research"]),
-  response: z.string(),
   plan: z.array(z.string()),
+  databaseSchema: z.string().optional(),
 });
 
 export async function planner(state: typeof ResearchState.State) {
@@ -19,20 +22,32 @@ export async function planner(state: typeof ResearchState.State) {
 
   const retrieveContextTool = createRetrieveContextTool(collection);
 
+  const tools = [];
+  const context: Record<string, unknown> = {};
+
+  tools.push(retrieveContextTool);
+  if (hasDatabaseConfig()) {
+    tools.push(executeSQLTool);
+    context.db = await getDatabase();
+  }
+
   const plannerAgent = createAgent({
     model: llm,
-    tools: [retrieveContextTool],
+    tools,
     systemPrompt: plannerPrompt,
   });
 
-  const result = await plannerAgent.invoke({
-    messages: [
-      {
-        role: "user",
-        content: state.query,
-      },
-    ],
-  });
+  const result = await plannerAgent.invoke(
+    {
+      messages: [
+        {
+          role: "user",
+          content: state.query,
+        },
+      ],
+    },
+    { context },
+  );
 
   const finalMessage = result.messages.at(-1);
 
@@ -62,14 +77,9 @@ export async function planner(state: typeof ResearchState.State) {
 
   console.log(`Done! Mode: ${structured.mode}\n`);
 
-  if (structured.mode == "research") {
-    console.log(structured.plan);
-  }
-  console.log();
-
   return {
     mode: structured.mode,
-    response: structured.response,
     plan: structured.plan,
+    databaseSchema: structured.databaseSchema,
   };
 }

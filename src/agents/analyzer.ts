@@ -97,6 +97,6 @@ ${context}
   console.log(`Done! Extracted ${analysis.sections.length} sections\n`);
 
   return {
-    analysis: [...state.analysis, analysis],
+    analysis: [analysis],
   };
 }

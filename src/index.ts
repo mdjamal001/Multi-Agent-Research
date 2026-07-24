@@ -36,8 +36,7 @@ async function main() {
   // -------------------------
 
   const query =
-    "Analyze the project report and compare in depth the methodologies and trends in the existing similar platforms";
-
+    "Analyze the operational performance of the TransitOps transportation company. Use the connected SQL database to retrieve relevant data and supplement it with web research when necessary. Generate a comprehensive report with insights, relevant database tables, visualizations, and actionable recommendations.";
   const result = await graph.invoke(
     {
       query,

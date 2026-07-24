@@ -3,7 +3,7 @@ import { ToolMessage } from "@langchain/core/messages";
 import { StructuredToolInterface } from "@langchain/core/tools";
 
 import { ResearchState } from "../graph/state";
-import { llm } from "../models/ollama";
+import { llm } from "../models/gemini";
 import { retrieverPrompt } from "../prompts/retriever";
 
 import { searchWebTool } from "../tools/webSearch";
@@ -15,6 +15,9 @@ import { rerank } from "../utils/reRanker";
 
 import { SearchHistory } from "../types/searchHistory";
 import { ResearchEvidence } from "../types/document";
+import { executeSQLTool } from "../database/tools";
+import { getDatabase } from "../database/db";
+import { config, hasDatabaseConfig } from "../database/config";
 
 async function retrieverAgent(state: typeof ResearchState.State) {
   const tools: StructuredToolInterface[] = [searchWebTool];
@@ -23,10 +26,13 @@ async function retrieverAgent(state: typeof ResearchState.State) {
     tools.push(createRetrieveContextTool(`research_${state.jobId}`));
   }
 
-  // Future
-  // if (state.databaseSession) {
-  //   tools.push(createDatabaseTool(...));
-  // }
+  const context: Record<string, unknown> = {};
+
+  // Register SQL tool only if database config is present
+  if (hasDatabaseConfig()) {
+    tools.push(executeSQLTool);
+    context.db = await getDatabase();
+  }
 
   const agent = createAgent({
     model: llm,
@@ -34,22 +40,28 @@ async function retrieverAgent(state: typeof ResearchState.State) {
     systemPrompt: retrieverPrompt,
   });
 
-  return agent.invoke({
-    messages: [
-      {
-        role: "user",
-        content: JSON.stringify({
-          query: state.query,
-          tasks: state.reflection?.followUpQueries?.length
-            ? state.reflection.followUpQueries
-            : state.plan,
-          previousSearches: state.searchHistory,
-        }),
-      },
-    ],
-  });
+  return agent.invoke(
+    {
+      messages: [
+        {
+          role: "user",
+          content: JSON.stringify({
+            query: state.query,
+            databaseMetaData: hasDatabaseConfig() ? config : null,
+            databaseSchema: state.databaseSchema,
+            tasks: state.reflection?.followUpQueries?.length
+              ? state.reflection.followUpQueries.join("\n")
+              : state.plan.join("\n"),
+            previousSearches: state.searchHistory,
+          }),
+        },
+      ],
+    },
+    {
+      context,
+    },
+  );
 }
-
 export async function retriever(state: typeof ResearchState.State) {
   console.log("Retrieving...");
 
