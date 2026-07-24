@@ -2,6 +2,7 @@ import { embeddings } from "../documents/embeddings";
 import { getCollection } from "../documents/chroma";
 import { ResearchEvidence } from "../types/document";
 import { randomUUID } from "crypto";
+import { stringSimilarity } from "string-similarity-js";
 
 export async function retrieveDocContext(
   query: string,
@@ -21,22 +22,41 @@ export async function retrieveDocContext(
   const metadatas = results.metadatas?.[0] ?? [];
   const distances = results.distances?.[0] ?? [];
 
-  return docs.map((content, index): ResearchEvidence => {
-    const metadata = metadatas[index] ?? {};
+  const unique: {
+    content: string;
+    metadata: any;
+    distance?: number;
+  }[] = [];
 
-    return {
+  for (let i = 0; i < docs.length; i++) {
+    const content = docs[i] ?? "";
+
+    const duplicate = unique.some(
+      (doc) => stringSimilarity(content, doc.content) > 0.95,
+    );
+
+    if (!duplicate) {
+      unique.push({
+        content,
+        metadata: metadatas[i] ?? {},
+        distance: distances[i] ?? undefined,
+      });
+    }
+  }
+
+  return unique.map(
+    ({ content, metadata, distance }): ResearchEvidence => ({
       id: randomUUID(),
       source: "document",
       title:
         typeof metadata.source === "string"
           ? metadata.source
           : "Uploaded Document",
-      content: content ?? "",
-      fullContent: content ?? "",
-      score:
-        typeof distances[index] === "number" ? 1 - distances[index] : undefined,
+      content,
+      fullContent: content,
+      score: typeof distance === "number" ? 1 - distance : undefined,
       fetched: true,
       metadata,
-    };
-  });
+    }),
+  );
 }

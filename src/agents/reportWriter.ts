@@ -11,6 +11,7 @@ const structuredLLM = llm.withStructuredOutput(reportIntroSchema);
 
 export async function reportWriter(state: typeof ResearchState.State) {
   console.log("Writing...");
+  console.log(state.analysis);
 
   const analyses = state.analysis
     .map(
