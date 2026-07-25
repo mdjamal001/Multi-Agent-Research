@@ -3,7 +3,7 @@ import { ToolMessage } from "@langchain/core/messages";
 import { StructuredToolInterface } from "@langchain/core/tools";
 
 import { ResearchState } from "../graph/state";
-import { llm } from "../models/gemini";
+import { llm } from "../models/ollama";
 import { retrieverPrompt } from "../prompts/retriever";
 
 import { searchWebTool } from "../tools/webSearch";
@@ -80,6 +80,8 @@ export async function retriever(state: typeof ResearchState.State) {
   }
 
   const result = await retrieverAgent(state);
+  console.log("\n Retreiver raw result 🦴🦴🦴🦴🦴🦴🦴🦴");
+  console.dir(result, { depth: "infinite" });
 
   const evidence: ResearchEvidence[] = [];
 
@@ -95,9 +97,15 @@ export async function retriever(state: typeof ResearchState.State) {
     }
   }
 
+  console.log("\n Retreiver cooked result 🍗🍗🍗🍗🍗🍗🍗🍗🍗");
+  console.dir(evidence, { depth: "infinite" });
+
   console.log(`Retrieved ${evidence.length} documents!`);
 
   const rankedEvidence = rerank(deduplicate(evidence));
+
+  // console.log("\n Retreiver deep cooked result 🍗🍗🍗🍗🍗🍗🍗🍗🍗");
+  // console.dir(rankedEvidence, { depth: "infinite" });
 
   const history: SearchHistory[] = tasks.map((query) => ({
     query,

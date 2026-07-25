@@ -7,7 +7,7 @@ import { stringSimilarity } from "string-similarity-js";
 export async function retrieveDocContext(
   query: string,
   collectionName: string,
-  limit = 5,
+  limit = 3,
 ): Promise<ResearchEvidence[]> {
   const collection = await getCollection(collectionName);
 
@@ -53,7 +53,6 @@ export async function retrieveDocContext(
           ? metadata.source
           : "Uploaded Document",
       content,
-      fullContent: content,
       score: typeof distance === "number" ? 1 - distance : undefined,
       fetched: true,
       metadata,

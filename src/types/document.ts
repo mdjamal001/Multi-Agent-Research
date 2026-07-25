@@ -9,8 +9,6 @@ export interface ResearchEvidence {
 
   content: string;
 
-  fullContent?: string;
-
   score?: number;
 
   fetched: boolean;

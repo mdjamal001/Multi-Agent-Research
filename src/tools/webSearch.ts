@@ -28,7 +28,6 @@ export async function searchWeb(query: string): Promise<ResearchEvidence[]> {
       source: "web",
       title: res.title,
       content: res.content,
-      fullContent: res.content,
       score: res.score,
       fetched: true,
       metadata: {

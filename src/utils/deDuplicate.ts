@@ -1,12 +1,33 @@
-import { ResearchDocument } from "../types/document";
+import { ResearchEvidence } from "../types/document";
+import { stringSimilarity } from "string-similarity-js";
 
-export function deduplicate(docs: ResearchDocument[]): ResearchDocument[] {
-  const seen = new Set<string>();
+const SIMILARITY_THRESHOLD = 0.9;
 
-  return docs.filter((doc) => {
-    if (seen.has(doc.url!)) return false;
+export function deduplicate(docs: ResearchEvidence[]): ResearchEvidence[] {
+  const unique: ResearchEvidence[] = [];
 
-    seen.add(doc.url!);
-    return true;
-  });
+  for (const doc of docs) {
+    const isDuplicate = unique.some((existing) => {
+      const titleSimilarity = stringSimilarity(
+        existing.title.toLowerCase(),
+        doc.title.toLowerCase(),
+      );
+
+      const contentSimilarity = stringSimilarity(
+        existing.content.slice(0, 500).toLowerCase(),
+        doc.content.slice(0, 500).toLowerCase(),
+      );
+
+      return (
+        titleSimilarity >= SIMILARITY_THRESHOLD &&
+        contentSimilarity >= SIMILARITY_THRESHOLD
+      );
+    });
+
+    if (!isDuplicate) {
+      unique.push(doc);
+    }
+  }
+
+  return unique;
 }

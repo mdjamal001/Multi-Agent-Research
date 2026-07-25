@@ -40,7 +40,7 @@ Title: ${doc.title}
 Reference: ${url}
 
 Content:
-${doc.fullContent ?? doc.content}
+${doc.content}
 `;
     })
     .join("\n\n----------------------------------------\n\n");

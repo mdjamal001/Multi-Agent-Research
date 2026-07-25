@@ -16,7 +16,6 @@ TOOLS
 
 3. SQL Database
 - Use only if structured data is required.
-- Max 3 calls.
 - The input specifies the database type.
 
 A databaseSchema may already be provided.
@@ -36,8 +35,10 @@ For MySQL:
 - Use MySQL syntax.
 - SHOW TABLES, DESCRIBE, SHOW COLUMNS are allowed.
 
-Only execute read-only queries (SELECT or schema inspection).
-Never execute INSERT, UPDATE, DELETE, DROP, ALTER, CREATE, or TRUNCATE.
+Rules for Database tool:
+- Only execute read-only queries (SELECT or schema inspection).
+- Never execute INSERT, UPDATE, DELETE, DROP, ALTER, CREATE, or TRUNCATE.
+- DON'T retrieve all rows/data from a table blindly, always limit the retrived rows, use them only to find the trends in the data or top SOMETHING rows.
 
 RULES
 

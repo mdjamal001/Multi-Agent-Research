@@ -1,6 +1,8 @@
 import * as z from "zod";
 import { tool } from "langchain";
 import { SqlDatabase } from "@langchain/classic/sql_db";
+import { ResearchEvidence } from "../types/document";
+import { content } from "pdfkit/js/page";
 
 export const executeSQLTool = tool(
   async ({ query }, runtime) => {
@@ -10,9 +12,23 @@ export const executeSQLTool = tool(
       throw new Error("No SQL database is configured.");
     }
 
-    const res = await db.run(query);
+    console.log("Execute SQL tool called...");
 
-    return res;
+    const result = await db.run(query);
+
+    const evidence: ResearchEvidence = {
+      id: crypto.randomUUID(),
+      source: "database",
+      title: "SQL Query Result",
+      content: result,
+      fetched: true,
+      metadata: {
+        query,
+      },
+    };
+    // console.log("Type of SQL tool: " + typeof result);
+
+    return [result, [evidence]];
   },
   {
     name: "execute_sql",
@@ -25,5 +41,6 @@ Never execute INSERT, UPDATE, DELETE, DROP, ALTER, CREATE or TRUNCATE.
     schema: z.object({
       query: z.string(),
     }),
+    responseFormat: "content_and_artifact",
   },
 );
