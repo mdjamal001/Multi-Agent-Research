@@ -26,9 +26,10 @@ export async function planner(state: typeof ResearchState.State) {
   const context: Record<string, unknown> = {};
 
   tools.push(retrieveContextTool);
-  if (hasDatabaseConfig()) {
+  const db = await getDatabase(state.dbConfig);
+  if (db) {
     tools.push(executeSQLTool);
-    context.db = await getDatabase();
+    context.db = db;
   }
 
   const plannerAgent = createAgent({

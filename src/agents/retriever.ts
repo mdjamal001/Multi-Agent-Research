@@ -3,7 +3,9 @@ import { ToolMessage } from "@langchain/core/messages";
 import { StructuredToolInterface } from "@langchain/core/tools";
 
 import { ResearchState } from "../graph/state";
-import { llm } from "../models/ollama";
+import { llm as ollamaLLM } from "../models/ollama";
+import { llm as geminiLLM } from "../models/gemini";
+import { llm as groqLLM } from "../models/groq";
 import { retrieverPrompt } from "../prompts/retriever";
 
 import { searchWebTool } from "../tools/webSearch";
@@ -28,14 +30,23 @@ async function retrieverAgent(state: typeof ResearchState.State) {
 
   const context: Record<string, unknown> = {};
 
-  // Register SQL tool only if database config is present
-  if (hasDatabaseConfig()) {
+  // Register SQL tool if database config or custom DB is provided and connected
+  const db = await getDatabase(state.dbConfig);
+  if (db) {
     tools.push(executeSQLTool);
-    context.db = await getDatabase();
+    context.db = db;
+  }
+
+  // Model Selection for Retriever (Defaults to Groq llama-3.1-8b-instant)
+  let selectedModel: any = groqLLM;
+  if (process.env.USE_OLLAMA === "true") {
+    selectedModel = ollamaLLM;
+  } else if (process.env.USE_GEMINI_FOR_RETRIEVER === "true") {
+    selectedModel = geminiLLM;
   }
 
   const agent = createAgent({
-    model: llm,
+    model: selectedModel,
     tools,
     systemPrompt: retrieverPrompt,
   });
@@ -52,7 +63,7 @@ async function retrieverAgent(state: typeof ResearchState.State) {
             tasks: state.reflection?.followUpQueries?.length
               ? state.reflection.followUpQueries.join("\n")
               : state.plan.join("\n"),
-            previousSearches: state.searchHistory,
+            previousSearches: state.searchHistory.map((h) => h.query),
           }),
         },
       ],
@@ -80,8 +91,8 @@ export async function retriever(state: typeof ResearchState.State) {
   }
 
   const result = await retrieverAgent(state);
-  console.log("\n Retreiver raw result 🦴🦴🦴🦴🦴🦴🦴🦴");
-  console.dir(result, { depth: "infinite" });
+  // console.log("\n Retreiver raw result 🦴🦴🦴🦴🦴🦴🦴🦴");
+  // console.dir(result, { depth: "infinite" });
 
   const evidence: ResearchEvidence[] = [];
 
@@ -97,10 +108,10 @@ export async function retriever(state: typeof ResearchState.State) {
     }
   }
 
-  console.log("\n Retreiver cooked result 🍗🍗🍗🍗🍗🍗🍗🍗🍗");
-  console.dir(evidence, { depth: "infinite" });
+  // console.log("\n Retreiver cooked result 🍗🍗🍗🍗🍗🍗🍗🍗🍗");
+  // console.dir(evidence, { depth: "infinite" });
 
-  console.log(`Retrieved ${evidence.length} documents!`);
+  // console.log(`Retrieved ${evidence.length} documents!`);
 
   const rankedEvidence = rerank(deduplicate(evidence));
 

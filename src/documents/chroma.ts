@@ -1,8 +1,11 @@
 import { ChromaClient, Collection } from "chromadb";
 
+const host = process.env.CHROMA_HOST || "localhost";
+const port = parseInt(process.env.CHROMA_PORT || "8000", 10);
+
 const client = new ChromaClient({
-  host: "localhost",
-  port: 8000,
+  host,
+  port,
   ssl: false,
 });
 

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Autonomous Multi-Agent Deep Research System powered by LangGraph, ChromaDB, and BullMQ Distributed Workers">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">AG</div>
+        <div>
+          <h1>Multi-Agent Deep Research System</h1>
+          <div class="brand-tag">LangGraph Orchestration • BullMQ Worker Pool • Chroma Vector Store</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button id="clearQueueBtn" style="background: rgba(245, 108, 108, 0.15); border: 1px solid rgba(245, 108, 108, 0.3); color: #f56c6c; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s;" title="Clear all waiting & active queue jobs">
+          🗑️ Clear Queue
+        </button>
+        <div class="system-status">
+          <div class="status-dot" id="systemStatusDot"></div>
+          <span id="systemStatusText">Connecting to backend...</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Dashboard Grid -->
+    <main class="dashboard-grid">
+      <!-- Left Column: Create Job -->
+      <section class="card">
+        <div class="card-title">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          Launch Research Task
+        </div>
+
+        <form id="researchForm">
+          <div class="form-group">
+            <label class="form-label" for="queryInput">Research Query / Directive</label>
+            <textarea 
+              id="queryInput" 
+              name="query" 
+              rows="4" 
+              placeholder="e.g. Analyze operational performance of TransitOps, query connected database, evaluate web evidence, and synthesize a comprehensive report with charts."
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Reference Documents (Optional)</label>
+            <div class="dropzone" id="dropzone">
+              <div class="dropzone-icon">📁</div>
+              <p>Drag & drop PDF, TXT, or DOCX files here, or click to upload</p>
+              <input type="file" id="fileInput" multiple style="display: none;" accept=".pdf,.txt,.docx,.pptx">
+            </div>
+            <div class="file-list" id="fileListContainer"></div>
+          </div>
+
+          <!-- Database Connection Options (Local or Cloud) -->
+          <div class="form-group db-section">
+            <label class="form-label">Database Retrieval Options (Optional)</label>
+            <div class="db-options">
+              <label class="db-option">
+                <input type="radio" name="dbMode" value="none" checked>
+                <span>None (Web & Vector Search)</span>
+              </label>
+              <label class="db-option">
+                <input type="radio" name="dbMode" value="cloud">
+                <span>Cloud DB URL (Neon / Supabase / AWS)</span>
+              </label>
+              <label class="db-option">
+                <input type="radio" name="dbMode" value="custom">
+                <span>Custom Local / Remote PostgreSQL</span>
+              </label>
+            </div>
+
+            <!-- Cloud DB Connection String Field -->
+            <div id="cloudDbPanel" class="db-panel" style="display: none; margin-top: 12px;">
+              <input 
+                type="text" 
+                id="dbUrlInput" 
+                placeholder="e.g. postgresql://user:pass@ep-xyz.neon.tech/dbname?sslmode=require"
+              >
+              <span class="field-hint">Supports Neon, Supabase, AWS RDS, ElephantSQL, or any Cloud Postgres Connection URI.</span>
+            </div>
+
+            <!-- Custom PostgreSQL Fields Panel -->
+            <div id="customDbPanel" class="db-panel" style="display: none; margin-top: 12px;">
+              <div class="grid-2">
+                <input type="text" id="dbHostInput" placeholder="Host (e.g. localhost / host.docker.internal)">
+                <input type="number" id="dbPortInput" placeholder="Port (Default 5432)" value="5432">
+              </div>
+              <div class="grid-2" style="margin-top: 8px;">
+                <input type="text" id="dbUserInput" placeholder="Username (e.g. postgres)">
+                <input type="password" id="dbPasswordInput" placeholder="Password">
+              </div>
+              <input type="text" id="dbNameInput" placeholder="Database Name (e.g. transitops)" style="margin-top: 8px;">
+              <label class="checkbox-label" style="margin-top: 8px;">
+                <input type="checkbox" id="dbSslCheckbox"> Enable SSL (Required for Cloud DBs)
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" id="submitBtn">
+            <span>🚀 Launch Research Agent</span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Right Column: Execution Terminal & Progress -->
+      <section class="card" id="activeJobCard">
+        <div class="card-title">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+          Live Agentic Execution
+        </div>
+
+        <div class="progress-header">
+          <span style="font-size: 13px; color: var(--text-muted);" id="currentJobIdDisplay">No Active Job</span>
+          <span style="font-size: 14px; font-weight: 700; color: var(--accent-cyan);" id="progressPercent">0%</span>
+        </div>
+
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressBarFill"></div>
+        </div>
+
+        <!-- Pipeline Steps -->
+        <div class="stepper">
+          <div class="step-item" id="step-indexing_documents">
+            <div class="step-number">1</div>
+            <div class="step-text">Document Ingestion & Chroma Vector Store Indexing</div>
+          </div>
+          <div class="step-item" id="step-running_planner">
+            <div class="step-number">2</div>
+            <div class="step-text">Planner Agent Task Decomposition & Strategy</div>
+          </div>
+          <div class="step-item" id="step-retrieving_data">
+            <div class="step-number">3</div>
+            <div class="step-text">Retriever Agent (Web, SQL DB & Vector Evidence)</div>
+          </div>
+          <div class="step-item" id="step-analyzing">
+            <div class="step-number">4</div>
+            <div class="step-text">Analyzer Agent & Reflection Self-Correction Loop</div>
+          </div>
+          <div class="step-item" id="step-generating_report">
+            <div class="step-number">5</div>
+            <div class="step-text">Visualization Generation & PDF Compilation</div>
+          </div>
+        </div>
+
+        <!-- Terminal Log Stream -->
+        <div class="terminal" id="terminal">
+          <div class="log-entry">
+            <span class="log-time">[System]</span>
+            <span class="log-msg">Ready. Waiting for research task submission...</span>
+          </div>
+        </div>
+
+        <!-- Report Download Button -->
+        <div class="report-action" id="reportAction">
+          <a href="#" target="_blank" class="btn-success" id="downloadReportBtn">
+            <span>📥 Download Generated PDF Report</span>
+          </a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

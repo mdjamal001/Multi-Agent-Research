@@ -69,9 +69,22 @@ ${blocks}
   );
 
   try {
-    await generatePdf(report, `./reports/${intro.fileName}.pdf`);
+    const fs = await import("fs/promises");
+    await fs.mkdir("./reports", { recursive: true });
+
+    const primaryPath = state.jobId
+      ? `./reports/${state.jobId}.pdf`
+      : `./reports/${intro.fileName || "report"}.pdf`;
+
+    await generatePdf(report, primaryPath);
+
+    if (state.jobId && intro.fileName) {
+      try {
+        await fs.copyFile(primaryPath, `./reports/${intro.fileName}.pdf`);
+      } catch {}
+    }
   } catch (e) {
-    console.error(e);
+    console.error("Error generating PDF:", e);
   }
 
   console.log("Report Generated");

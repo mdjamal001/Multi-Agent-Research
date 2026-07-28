@@ -6,6 +6,16 @@ import { SearchHistory } from "../types/searchHistory";
 import { Report } from "../types/report";
 import { Visualization } from "../types/visualization";
 
+export interface DbCustomConfig {
+  url?: string;
+  host?: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  database?: string;
+  ssl?: boolean;
+}
+
 export const ResearchState = Annotation.Root({
   // Original user query
   query: Annotation<string>(),
@@ -16,7 +26,8 @@ export const ResearchState = Annotation.Root({
   // Database schema discovered during planning
   databaseSchema: Annotation<string | undefined>(),
 
-  // ...
+  // Custom database configuration (Local or Cloud)
+  dbConfig: Annotation<DbCustomConfig | undefined>(),
 
   mode: Annotation<"chat" | "research">(),
 
